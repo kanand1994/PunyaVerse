@@ -4,29 +4,49 @@ import "@/index.css";
 import "@/lib/i18n";
 import App from "@/App";
 
-// Suppress CRA overlay for benign third-party object rejections (PostHog, emergent-main.js, etc.)
-// We DO still log them so real bugs surface.
+// ─────────────────────────────────────────────────────────────────────────
+// Global error suppression — registered in CAPTURE phase so we run BEFORE
+// the webpack-dev-server overlay listener and can stopImmediatePropagation.
+// We swallow ONLY non-Error / 3rd-party rejections so real bugs still log.
+// ─────────────────────────────────────────────────────────────────────────
 if (typeof window !== "undefined") {
-  window.addEventListener("unhandledrejection", (e) => {
-    const r = e.reason;
-    const isThirdParty =
-      (r && typeof r === "object" && !r.message && !r.stack) ||
-      (r?.stack && /emergent-main|posthog|chrome-extension/i.test(r.stack));
-    if (isThirdParty) {
-      // eslint-disable-next-line no-console
-      console.warn("[suppressed third-party rejection]", r);
-      e.preventDefault();
-    }
-  });
+  const isObjectError = (r) =>
+    r && typeof r === "object" && !r.message && !r.stack && Object.keys(r).length === 0;
 
-  window.addEventListener("error", (e) => {
-    const src = e?.filename || "";
-    if (/emergent-main|posthog|chrome-extension|leaflet-marker-icon/.test(src)) {
-      // eslint-disable-next-line no-console
-      console.warn("[suppressed third-party error]", e.message);
-      e.preventDefault();
-    }
-  });
+  const isThirdPartySource = (src) =>
+    !!src && /(emergent|visual-edits|posthog|chrome-extension|gtag|google-analytics)/i.test(src);
+
+  window.addEventListener(
+    "unhandledrejection",
+    (e) => {
+      const r = e.reason;
+      if (
+        isObjectError(r) ||
+        (r && typeof r === "object" && isThirdPartySource(r.stack || r.source || r.filename))
+      ) {
+        // eslint-disable-next-line no-console
+        console.warn("[suppressed rejection]", r);
+        e.preventDefault();
+        e.stopImmediatePropagation?.();
+      }
+    },
+    true /* capture */
+  );
+
+  window.addEventListener(
+    "error",
+    (e) => {
+      const src = e?.filename || e?.error?.stack || "";
+      const isObj = e?.error && typeof e.error === "object" && !e.error.message;
+      if (isObj || isThirdPartySource(src)) {
+        // eslint-disable-next-line no-console
+        console.warn("[suppressed window error]", e.message, src);
+        e.preventDefault();
+        e.stopImmediatePropagation?.();
+      }
+    },
+    true /* capture */
+  );
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

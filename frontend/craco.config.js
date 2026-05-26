@@ -61,6 +61,13 @@ let webpackConfig = {
 };
 
 webpackConfig.devServer = (devServerConfig) => {
+  // Disable WDS error overlay — our React ErrorBoundary handles user-facing errors gracefully,
+  // and benign third-party (visual-edits / posthog) object-rejections must not surface as red overlays.
+  devServerConfig.client = {
+    ...(devServerConfig.client || {}),
+    overlay: false,
+  };
+
   // Add health check endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
     const originalSetupMiddlewares = devServerConfig.setupMiddlewares;

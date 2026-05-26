@@ -23,7 +23,7 @@ export default function Navbar() {
     { to: "/packages", label: t("nav.packages") },
     { to: "/ai-planner", label: t("nav.ai_planner") },
     { to: "/trip-builder", label: t("nav.trip_builder") },
-    { to: "/vip-darshan", label: t("nav.vip_darshan") },
+    { to: "/trekking", label: t("nav.trekking") },
     { to: "/transport", label: t("nav.transport") },
     { to: "/festivals", label: t("nav.festivals") },
   ];

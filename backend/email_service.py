@@ -94,3 +94,107 @@ Need help? Reach our 24×7 concierge at care@punyaverse.com
 
 — PunyaVerse
 """
+
+
+# ── Welcome ──────────────────────────────────────────────────────────────
+def welcome_html(*, name: str, login_url: str) -> str:
+    inner = f"""
+      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:22px;">Welcome, {name} 🙏</p>
+      <p style="margin:0 0 12px;">Your seat at the temple of sacred travel is reserved. PunyaVerse blends AI itineraries with white-glove pilgrimage operations — from the Char Dham to Kailash Mansarovar.</p>
+      <p style="margin:0 0 12px;"><strong>Start here:</strong></p>
+      <ul style="margin:0 0 12px;padding-left:18px;">
+        <li>Ask our <strong>AI Spiritual Planner</strong> any question — "10-day Kedarnath under ₹60k" or "best time for Saga Dawa".</li>
+        <li>Browse 8 signature packages across India · Nepal · Kailash.</li>
+        <li>Build your own yatra by adding any of our 43 temples to a custom route.</li>
+      </ul>
+    """
+    return _wrap(inner, cta_url=login_url, cta_label="Open my dashboard →")
+
+
+def welcome_text(*, name: str, login_url: str) -> str:
+    return f"""\
+Welcome, {name},
+
+Your seat at the temple of sacred travel is reserved. PunyaVerse blends AI itineraries with white-glove pilgrimage operations.
+
+Open your dashboard: {login_url}
+
+— PunyaVerse
+"""
+
+
+# ── Booking confirmation ─────────────────────────────────────────────────
+def booking_confirmation_html(*, name: str, booking_id: str, package_title: str,
+                                amount_inr: float, gateway: str,
+                                travelers: int, departure_date: str | None,
+                                dashboard_url: str) -> str:
+    dep = f"<tr><td style='padding:6px 0;color:#7A6F5F;'>Departure</td><td style='padding:6px 0;text-align:right;'>{departure_date}</td></tr>" if departure_date else ""
+    inner = f"""
+      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:22px;">🪔 Yatra confirmed, {name}!</p>
+      <p style="margin:0 0 16px;">Your payment was received and your <strong>{package_title}</strong> is officially on the calendar. Our concierge will reach out within 24 hours with your detailed day-wise plan, pickup details and a dedicated WhatsApp group.</p>
+
+      <table cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #E5E0D8;border-radius:8px;padding:14px 18px;background:#F9F6F0;font-size:14px;">
+        <tr><td style="padding:6px 0;color:#7A6F5F;">Booking ID</td><td style="padding:6px 0;text-align:right;font-family:'SF Mono',Menlo,monospace;font-size:12px;">{booking_id[:18]}…</td></tr>
+        <tr><td style="padding:6px 0;color:#7A6F5F;">Package</td><td style="padding:6px 0;text-align:right;">{package_title}</td></tr>
+        <tr><td style="padding:6px 0;color:#7A6F5F;">Travelers</td><td style="padding:6px 0;text-align:right;">{travelers}</td></tr>
+        {dep}
+        <tr><td style="padding:6px 0;color:#7A6F5F;">Amount</td><td style="padding:6px 0;text-align:right;font-weight:600;">₹ {amount_inr:,.0f}</td></tr>
+        <tr><td style="padding:6px 0;color:#7A6F5F;">Paid via</td><td style="padding:6px 0;text-align:right;text-transform:capitalize;">{gateway}</td></tr>
+      </table>
+
+      <p style="margin:16px 0 0;font-size:13px;color:#7A6F5F;">Free cancellation up to 30 days before departure. Need to amend dates or travelers? Just reply to this email.</p>
+    """
+    return _wrap(inner, cta_url=dashboard_url, cta_label="View booking →")
+
+
+def booking_confirmation_text(*, name: str, booking_id: str, package_title: str,
+                               amount_inr: float, gateway: str, travelers: int,
+                               departure_date: str | None, dashboard_url: str) -> str:
+    return f"""\
+Yatra confirmed, {name}!
+
+Your payment was received and your {package_title} is officially on the calendar.
+
+Booking ID: {booking_id}
+Package: {package_title}
+Travelers: {travelers}
+{f'Departure: {departure_date}' if departure_date else ''}
+Amount: ₹ {amount_inr:,.0f}
+Paid via: {gateway.title()}
+
+View your booking: {dashboard_url}
+
+Need to amend dates? Reply to this email. Free cancellation up to 30 days before departure.
+
+— PunyaVerse
+"""
+
+
+# ── 24h follow-up reminder (2nd dunning) ─────────────────────────────────
+def followup_reminder_html(*, name: str, package_title: str, amount_inr: float, resume_url: str) -> str:
+    inner = f"""
+      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:22px;">Namaste {name} 🙏</p>
+      <p style="margin:0 0 12px;">A gentle reminder — your booking for <strong>{package_title}</strong> is still waiting for you. We've held your slot a little longer because we sensed real intent in your search.</p>
+      <p style="margin:0 0 12px;"><strong>Why pilgrims pick PunyaVerse:</strong></p>
+      <ul style="margin:0 0 12px;padding-left:18px;color:#0B132B;">
+        <li>VIP darshan assistance with priest-led rituals</li>
+        <li>Doctor + oxygen support on every Himalayan yatra</li>
+        <li>Free cancellation up to 30 days before departure</li>
+      </ul>
+      <p style="margin:0 0 12px;">Total still applicable: <strong>₹ {amount_inr:,.0f}</strong></p>
+    """
+    return _wrap(inner, cta_url=resume_url, cta_label="Complete my booking →")
+
+
+def followup_reminder_text(*, name: str, package_title: str, amount_inr: float, resume_url: str) -> str:
+    return f"""\
+Namaste {name},
+
+A gentle reminder — your booking for {package_title} is still waiting for you. Total: ₹ {amount_inr:,.0f}.
+
+Complete your booking: {resume_url}
+
+Free cancellation up to 30 days before departure.
+
+— PunyaVerse
+"""

@@ -18,38 +18,23 @@ User-confirmed stack (initial): React + FastAPI + MongoDB, GPT-5.2 with fallback
 4. **SuperAdmin** — hidden portal; full control, audit logs, feature flags, payments overview.
 
 ## Implemented (May 2026)
-### Backend (46/46 tests passed)
-- 43 temples seeded across N/E/W/C/S India + Nepal + Kailash
-- 8 signature packages incl. Char Dham, Kailash Heli Express, Do Dham, Jyotirlinga 12, Amarnath, Vaishno Devi, South India, Nepal
-- Dynamic pricing engine (season + group discount + 5% GST)
-- Train vs Flight vs Helicopter vs Bus comparison with 7 preset routes
-- Custom Trip Builder with altitude-aware route optimization
-- AI Spiritual Planner with **GPT-5.2 → Claude Sonnet 4.5 → Gemini 3 Flash** fallback chain
-- Weather + Crowd prediction (elevation/month heuristic)
-- Festival calendar (15 festivals for 2026)
-- Bookings + Stripe checkout (INR → USD conversion, test key, webhook + polling)
-- Reviews & Wishlist
-- Employee/Admin/SuperAdmin role-segregated endpoints
-- Hidden Sanctum portal guard via X-Sanctum-Portal header
-- Audit logging for SuperAdmin actions
-- Seeded demo accounts (see `/app/memory/test_credentials.md`)
+### Iteration 1 (Backend 46/46 + Frontend MVP)
+- 43 temples + 8 packages seeded
+- AI Planner with GPT-5.2 → Claude Sonnet 4.5 → Gemini 3 Flash fallback
+- Stripe checkout, dynamic pricing, custom trip builder
+- All 4 dashboards (User/Employee/Admin/SuperAdmin)
+- Reviews, wishlist, weather + crowd prediction, festival calendar
 
-### Frontend
-- Landing page (cinematic Himalayan hero, mandala CTA section)
-- Temple Explorer + Temple Detail (with map, weather, crowd, reviews, wishlist)
-- Package Explorer + Package Detail (dynamic price preview, booking → Stripe)
-- AI Planner (prompt + constraints, sample prompts, markdown render)
-- Custom Trip Builder (add/remove temples, transport/hotel/days/travelers, live quote)
-- Transport Compare (4-card layout with recommended highlighting)
-- Trekking Explorer (filtered to trek-requiring temples)
-- Festival Calendar
-- Login / Register
-- Payment Success (with polling) & Cancel
-- User Dashboard (bookings, wishlist, AI itineraries)
-- Employee Dashboard (assigned bookings, confirm/refund)
-- Admin Dashboard (analytics charts, users, bookings, assign employees, create employee)
-- Hidden SuperAdmin Dashboard at `/sanctum-portal-7821` (users, role mgmt, audit logs, payments, feature flags, system stats)
-- Dark/light theme toggle, responsive nav with mobile drawer
+### Iteration 2 (Backend 70/70 — 24 new + 46 regression)
+- **Razorpay/UPI payments** (real test keys) alongside Stripe — gateway selector on package detail
+- **VIP Darshan Inventory** — 8 VIP temples × 6 daily slots × 30 capacity (lazy-seeded per UTC date)
+- **WebSocket notifications** — JWT-authenticated `/api/ws/notifications`; real-time toasts on booking confirm
+- **Notification persistence** — `/api/notifications/me` for offline retrieval
+- **OSRM multi-stop polyline** — Trip Builder shows golden road route between selected temples
+- **Multilingual UI** — English + हिन्दी via i18next; globe-icon language switcher in navbar
+- **"Sample fares" disclaimer** on Transport Compare
+- ESLint hook-deps warnings resolved
+- Bug fix: VIP booking response leaked Mongo `_id` (testing agent found + fixed)
 
 ## Backlog
 ### P0 (blocking polish)

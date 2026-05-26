@@ -1,0 +1,156 @@
+{
+  "theme_and_archetype": {
+    "domain": "Travel, Spiritual SaaS Ecosystem",
+    "theme": "Dual (Light and Dark Mode)",
+    "archetype_selected": "Archetype 5 (Luxury) mixed with Archetype 1 (Organic & Earthy)",
+    "reasoning": "The platform is enterprise-grade spiritual travel with a luxury premium feel. It needs to reflect the serene, awe-inspiring, and expansive nature of the Himalayas and ancient temples, blending high-end cinematic aesthetics with deeply rooted spiritual warmth."
+  },
+  "typography": {
+    "pairing_strategy": "The Old Money Tech (Classic Serif Headings + Sterile Mono/Clean Sans Body) customized for spiritual luxury.",
+    "fonts": {
+      "headings": {
+        "family": "Marcellus",
+        "fallback": "serif",
+        "description": "Architectural, elegant serif that resonates with ancient temple aesthetics and luxury.",
+        "usage": "H1, H2, large display numbers, hero texts. Must use tight letter spacing (tracking-tight) for sizes > 32px."
+      },
+      "subheadings": {
+        "family": "Tenor Sans",
+        "fallback": "sans-serif",
+        "description": "A humanist sans-serif with a graceful, classic feel for bridge texts.",
+        "usage": "H3, H4, overlines (with uppercase and tracking-[0.2em])."
+      },
+      "body": {
+        "family": "Manrope",
+        "fallback": "sans-serif",
+        "description": "Clean, highly legible geometric sans to handle the complex dashboard and booking data.",
+        "usage": "Paragraphs, UI elements, data tables, labels."
+      }
+    },
+    "hierarchy": {
+      "H1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none",
+      "H2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-none",
+      "H3": "text-xl sm:text-2xl",
+      "H4": "text-lg sm:text-xl",
+      "body": "text-base leading-relaxed",
+      "overlines": "text-xs tracking-[0.2em] uppercase font-bold"
+    },
+    "rules": [
+      "Avoid Inter, Roboto, Open Sans completely.",
+      "Headlines > 32px MUST use tracking-tight.",
+      "Overlines MUST be Uppercase + Wide Spacing."
+    ]
+  },
+  "color_system": {
+    "light_mode": {
+      "background": "#F9F6F0",
+      "surface": "#E5E0D8",
+      "text": "#1A1A1A",
+      "text_muted": "#5C5C5C",
+      "primary": "#D4AF37",
+      "primary_hover": "#B3922E",
+      "accent": "#FF9933",
+      "border": "#D2CCC1",
+      "glass": "bg-white/70 backdrop-blur-xl border-white/40"
+    },
+    "dark_mode": {
+      "background": "#0B132B",
+      "surface": "#1C2541",
+      "text": "#F9F6F0",
+      "text_muted": "#A0ABC0",
+      "primary": "#D4AF37",
+      "primary_hover": "#F0D171",
+      "accent": "#FF9933",
+      "border": "#2A365C",
+      "glass": "bg-[#0B132B]/60 backdrop-blur-xl border-white/10"
+    },
+    "general_rules": {
+      "tints": "Never use pure #000000 or #FFFFFF. Dark backgrounds are tinted Himalayan Blue, Light backgrounds are tinted Parchment/Bone.",
+      "gradients": "Avoid full-screen gradients. Use subtle gold accents (#D4AF37) for interactive states or magical AI moments.",
+      "contrast": "Ensure minimum 4.5:1 for standard text. When placing text over hero images, use bg-black/40 overlay max, with text shadow."
+    }
+  },
+  "spacing_and_layout": {
+    "scale": "Generous Spacing: p-6, p-8, p-12, p-16, p-24.",
+    "marketing_pages": {
+      "grid": "Tetris/Asymmetric grids. grid-cols-1 md:grid-cols-12 gap-8.",
+      "hero": "Max overlay opacity bg-black/40. The image must breathe. Use gradient overlay instead of flat blanket."
+    },
+    "dashboards": {
+      "grid": "Control Room grid. grid-cols-1 lg:grid-cols-4 gap-6.",
+      "density": "Use cardless UI where possible, flat backgrounds with 1px border. Deep padding to separate sections visually rather than heavy boxes."
+    },
+    "alignment": "Mobile-first. Left-align dense content. Symmetrical centering only for primary hero or high-impact editorial statements."
+  },
+  "surface_strategies": {
+    "navigation": "Crystal Glass. Sticky z-50 with backdrop-blur-xl and delicate inner stroke.",
+    "dashboard_widgets": "Flat solid surfaces with subtle 1px border (border-border). Minimal border radius (rounded-md). No heavy shadows. Tactile hover lift (-translate-y-1).",
+    "footers": "Massive Space. py-24. High contrast shift from body content.",
+    "ai_planner": "The 'Tracing Beam' effect on the AI chat input or recommended package cards to signify alive technology."
+  },
+  "motion_and_interactions": {
+    "scrolling": "Lenis for momentum scrolling on marketing/landing pages.",
+    "transitions": "Use Framer Motion. Subtle staggered fades for temple lists and package grids (e.g., transition: transform 0.3s ease, opacity 0.3s ease).",
+    "hover_states": "Interactive elements MUST have explicit hover text and background color changes.",
+    "loading": "Spiritual/Mandala-inspired slow rotating SVG loader instead of standard spinners."
+  },
+  "component_rules": {
+    "marketing": "Pure HTML + Tailwind CSS. Raw divs and sections to achieve overlapping editorial layouts.",
+    "dashboard_and_booking": "Heavily customized Shadcn UI components. Use Shadcn tables, calendars, and dialogs. Strip generic Vercel aesthetic, inject Marcellus/Manrope fonts and gold/saffron accents.",
+    "icons": "Use @phosphor-icons/react (Duotone weight for marketing, Regular for dashboards)."
+  },
+  "media_urls": {
+    "hero_and_abstract": [
+      {
+        "url": "https://static.prod-images.emergentagent.com/jobs/f355ee94-a200-4266-a0f3-acc9fe3f8abb/images/c7791aed8974f00ef30f95539103eed8b328065461f6982b5a997a649b12ae55.png",
+        "description": "Luxurious spiritual travel conceptual art, glowing golden light over snow capped himalayan peaks. Use for main landing page hero.",
+        "category": "hero"
+      },
+      {
+        "url": "https://static.prod-images.emergentagent.com/jobs/f355ee94-a200-4266-a0f3-acc9fe3f8abb/images/c15b3f8f3cb63fe252ad3bc7f8d87ba204c7be1da5b94277954829da10454e0e.png",
+        "description": "Abstract minimalist mandala background, deep navy blue and metallic gold. Use for AI Planner background or VIP sections.",
+        "category": "background"
+      }
+    ],
+    "himalayas_landscapes": [
+      {
+        "url": "https://images.unsplash.com/photo-1645033393602-4f7623917853?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwzfHxoaW1hbGF5YXMlMjBtb3VudGFpbnN8ZW58MHx8fHwxNzc5Nzc3MDAzfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Snow capped mountains in distance. Use for Kailash/Nepal package banners.",
+        "category": "landscape"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1637846959991-18e54d6e2035?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwxfHxoaW1hbGF5YXMlMjBtb3VudGFpbnN8ZW58MHx8fHwxNzc5Nzc3MDAzfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Himalayas at sunset. Use for Char Dham package banners.",
+        "category": "landscape"
+      }
+    ],
+    "temples_and_culture": [
+      {
+        "url": "https://images.unsplash.com/photo-1677434654722-69e7ba88b4ef?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwzfHxpbmRpYW4lMjB0ZW1wbGUlMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzc5Nzc3MDAyfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Tall Indian temple structure. Use for Temple Detail pages or Temple Explorer.",
+        "category": "temple"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1554554497-0095c34db3ec?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjB0ZW1wbGUlMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzc5Nzc3MDAyfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Ancient brown temple. Use for architectural historical context.",
+        "category": "temple"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1599831069477-b2acdc0bcb91?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwyfHxnYW5nYSUyMGFhcnRpfGVufDB8fHx8MTc3OTc3NzAwMnww&ixlib=rb-4.1.0&q=85",
+        "description": "Ganga Aarti scene. Use for immersive cultural experiences and package features.",
+        "category": "culture"
+      }
+    ],
+    "guidance": "DO NOT use placeholder URLs. Map these exact URLs to specific components dynamically."
+  },
+  "testing_guidelines": {
+    "data_testid": "All interactive elements (buttons, links, form inputs) MUST have a role-based kebab-case data-testid attribute. Example: data-testid='package-book-button'."
+  },
+  "instructions_to_main_agent": [
+    "Load Marcellus, Tenor Sans, and Manrope fonts.",
+    "Install @phosphor-icons/react for iconography.",
+    "Setup routing for marketing landing, temple explorer, planner, and the multi-role dashboards.",
+    "Implement light/dark mode toggling, ensuring the deep Himalayan Blue and Parchment Cream scales are preserved.",
+    "Use framer-motion for staggering lists in Temple Explorer and Package Explorer."
+  ]
+}

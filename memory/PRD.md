@@ -36,7 +36,10 @@ User-confirmed stack (initial): React + FastAPI + MongoDB, GPT-5.2 with fallback
 - ESLint hook-deps warnings resolved
 - Bug fix: VIP booking response leaked Mongo `_id` (testing agent found + fixed)
 
-### Iteration 3 (Branding & Hardening)
+### Iteration 4 (VIP Cleanup + Dunning Emails)
+- **VIP Darshan fully removed** — endpoints, slot lazy-seeding, capacity logic, and the two MongoDB collections (`vip_slots`, `vip_bookings`) all gone. One-time drop runs on backend startup via cron. Verified 404 on all `/api/vip-darshan/*` paths.
+- **Resend transactional emails** — `email_service.py` with branded PunyaVerse HTML template (parchment + gold, mandala logo). Async-safe via `asyncio.to_thread`. Returns `None` on failure (never raises).
+- **Expired-payment dunning flow** — hourly cron atomically flips `payment_status: initiated → expired` for sessions older than 1h, sends a "Resume booking" email exactly once (idempotent via `dunning_sent` flag). Verified end-to-end with a seeded 2-hour-old session: 1st run sent email (real Resend id stored), 2nd run was a no-op.
 - **Brand identity** — PunyaVerse oval logo (dark navy + gold mandala) wired into navbar + footer; PV letter-mark logo set as favicon + apple-touch-icon
 - **Page title** updated to "PunyaVerse · Connecting Every Sacred Path"
 - **Emergent badge removed** via MutationObserver-backed React component (resilient to re-injection)

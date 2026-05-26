@@ -1,10 +1,13 @@
-"""Razorpay & VIP Darshan slot booking + WebSocket notifications router."""
+"""VIP-related routes/data have been REMOVED per product decision.
+Trips are now run in batches with fixed time-slots — no VIP slot inventory.
+
+This module now contains only the non-VIP extras: Razorpay, WebSocket notifications,
+notifications API, and route optimization.
+"""
 import os
 import hmac
 import hashlib
 import logging
-from typing import List, Optional
-from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Request, WebSocket, WebSocketDisconnect
 import razorpay
 from db import db
@@ -105,7 +108,6 @@ async def razorpay_verify(payload: dict, user=Depends(get_current_user)):
         {"id": tx["booking_id"]}, {"$set": {"status": "confirmed"}}
     )
 
-    # Notify user via WS
     await notify_user(tx["user_id"], {
         "type": "booking_confirmed",
         "title": "Yatra confirmed 🙏",
@@ -127,114 +129,12 @@ async def razorpay_webhook(request: Request):
     return {"received": True}
 
 
-# ============ VIP DARSHAN INVENTORY ============
-VIP_TEMPLES = ["tirupati-balaji", "kashi-vishwanath", "shirdi-sai-baba",
-                "ujjain-mahakaleshwar", "vaishno-devi", "jagannath-puri",
-                "siddhivinayak", "kailash-mansarovar"]
-
-SLOT_TIMES = ["04:30 AM", "06:00 AM", "08:30 AM", "11:00 AM", "04:00 PM", "06:30 PM"]
-
-
-@router.get("/vip-darshan/slots")
-async def vip_slots(temple_slug: Optional[str] = None, date: Optional[str] = None):
-    """List slots for a temple/date. Lazily seed today's slots."""
-    today = date or datetime.now(timezone.utc).date().isoformat()
-    if temple_slug:
-        temples = [temple_slug] if temple_slug in VIP_TEMPLES else []
-    else:
-        temples = VIP_TEMPLES
-
-    # Seed missing slots
-    for tslug in temples:
-        existing = await db.vip_slots.count_documents({"temple_slug": tslug, "date": today})
-        if existing == 0:
-            temple = await db.temples.find_one({"slug": tslug}, {"_id": 0})
-            if not temple:
-                continue
-            base_price = 1500 if temple.get("vip_darshan") else 800
-            for st in SLOT_TIMES:
-                await db.vip_slots.insert_one({
-                    "id": new_id(),
-                    "temple_slug": tslug,
-                    "temple_name": temple["name"],
-                    "date": today,
-                    "time": st,
-                    "price_inr": base_price + (200 if st in ("04:30 AM", "06:30 PM") else 0),
-                    "capacity": 30,
-                    "booked": 0,
-                    "created_at": utc_now_iso(),
-                })
-
-    query = {"date": today}
-    if temple_slug:
-        query["temple_slug"] = temple_slug
-    rows = await db.vip_slots.find(query, {"_id": 0}).to_list(500)
-    rows.sort(key=lambda r: (r["temple_slug"], r["time"]))
-    return rows
-
-
-@router.post("/vip-darshan/book")
-async def vip_book(payload: dict, user=Depends(get_current_user)):
-    slot_id = payload.get("slot_id")
-    travelers = int(payload.get("travelers", 1))
-    if travelers < 1:
-        raise HTTPException(status_code=400, detail="travelers must be >= 1")
-
-    # Atomic capacity-checked increment: only update if booked + travelers <= capacity
-    updated = await db.vip_slots.find_one_and_update(
-        {
-            "id": slot_id,
-            "$expr": {"$lte": [{"$add": ["$booked", travelers]}, "$capacity"]},
-        },
-        {"$inc": {"booked": travelers}},
-        return_document=True,
-        projection={"_id": 0},
-    )
-    if not updated:
-        # Either slot not found OR no capacity left
-        exists = await db.vip_slots.find_one({"id": slot_id}, {"_id": 0})
-        if not exists:
-            raise HTTPException(status_code=404, detail="Slot not found")
-        raise HTTPException(status_code=400, detail="Slot full")
-
-    booking = {
-        "id": new_id(),
-        "slot_id": slot_id,
-        "user_id": user["id"],
-        "user_name": user["name"],
-        "user_email": user["email"],
-        "temple_slug": updated["temple_slug"],
-        "temple_name": updated["temple_name"],
-        "date": updated["date"],
-        "time": updated["time"],
-        "travelers": travelers,
-        "amount_inr": updated["price_inr"] * travelers,
-        "status": "confirmed",
-        "created_at": utc_now_iso(),
-    }
-    await db.vip_bookings.insert_one(booking)
-    booking.pop("_id", None)
-    await notify_user(user["id"], {
-        "type": "vip_booked",
-        "title": f"VIP Darshan booked · {updated['temple_name']}",
-        "message": f"{updated['date']} at {updated['time']} for {travelers} pilgrim(s).",
-    })
-    return booking
-
-
-@router.get("/vip-darshan/me")
-async def vip_my_bookings(user=Depends(get_current_user)):
-    rows = await db.vip_bookings.find({"user_id": user["id"]}, {"_id": 0}).to_list(200)
-    rows.sort(key=lambda r: r["created_at"], reverse=True)
-    return rows
-
-
 # ============ WEBSOCKET NOTIFICATIONS ============
-_active_connections: dict = {}  # user_id -> list[WebSocket]
+_active_connections: dict = {}
 
 
 async def notify_user(user_id: str, payload: dict):
-    """Push payload to all active WS connections of a user."""
+    """Push payload to all active WS connections of a user + persist."""
     conns = _active_connections.get(user_id, [])
     dead = []
     for ws in conns:
@@ -244,7 +144,6 @@ async def notify_user(user_id: str, payload: dict):
             dead.append(ws)
     for ws in dead:
         conns.remove(ws)
-    # Also persist for retrieval if user offline
     await db.notifications.insert_one({
         "id": new_id(),
         "user_id": user_id,
@@ -256,7 +155,6 @@ async def notify_user(user_id: str, payload: dict):
 
 @router.websocket("/ws/notifications")
 async def ws_notifications(websocket: WebSocket, token: str = ""):
-    """Frontend connects with ?token=<jwt>."""
     await websocket.accept()
     try:
         payload = decode_token(token)
@@ -270,7 +168,6 @@ async def ws_notifications(websocket: WebSocket, token: str = ""):
     try:
         await websocket.send_json({"type": "connected", "user_id": user_id})
         while True:
-            # ping/keepalive
             msg = await websocket.receive_text()
             if msg == "ping":
                 await websocket.send_json({"type": "pong"})
@@ -298,14 +195,11 @@ async def mark_read(nid: str, user=Depends(get_current_user)):
     return {"ok": True}
 
 
-# ============ OSRM MULTI-STOP ROUTING ============
+# ============ OSRM ROUTE ORDERING ============
 @router.post("/routes/optimize")
 async def optimize_route(payload: dict):
-    """Receive temple ids; return ordered lat/lng polyline coords for OSRM frontend rendering.
-    We don't proxy OSRM here — frontend calls public OSRM. We just return ordered stops."""
     temple_ids = payload.get("temples", [])
     temples = await db.temples.find({"id": {"$in": temple_ids}}, {"_id": 0}).to_list(50)
-    # Sort by region then elevation for acclimatisation
     temples.sort(key=lambda t: (t.get("region", "zz"), t.get("elevation_m") or 0))
     stops = [{"id": t["id"], "name": t["name"], "lat": t.get("lat"), "lng": t.get("lng")}
               for t in temples if t.get("lat") and t.get("lng")]

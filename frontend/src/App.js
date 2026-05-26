@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/lib/theme";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BadgeRemover from "@/components/BadgeRemover";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 import LandingPage from "@/pages/LandingPage";
 import TempleExplorer from "@/pages/TempleExplorer";
@@ -30,11 +31,12 @@ import "@/App.css";
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <BadgeRemover />
-          <Layout>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <BadgeRemover />
+            <Layout>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/temples" element={<TempleExplorer />} />
@@ -62,6 +64,7 @@ function App() {
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -177,27 +177,38 @@ async def vip_slots(temple_slug: Optional[str] = None, date: Optional[str] = Non
 async def vip_book(payload: dict, user=Depends(get_current_user)):
     slot_id = payload.get("slot_id")
     travelers = int(payload.get("travelers", 1))
-    slot = await db.vip_slots.find_one({"id": slot_id}, {"_id": 0})
-    if not slot:
-        raise HTTPException(status_code=404, detail="Slot not found")
-    if slot["booked"] + travelers > slot["capacity"]:
+    if travelers < 1:
+        raise HTTPException(status_code=400, detail="travelers must be >= 1")
+
+    # Atomic capacity-checked increment: only update if booked + travelers <= capacity
+    updated = await db.vip_slots.find_one_and_update(
+        {
+            "id": slot_id,
+            "$expr": {"$lte": [{"$add": ["$booked", travelers]}, "$capacity"]},
+        },
+        {"$inc": {"booked": travelers}},
+        return_document=True,
+        projection={"_id": 0},
+    )
+    if not updated:
+        # Either slot not found OR no capacity left
+        exists = await db.vip_slots.find_one({"id": slot_id}, {"_id": 0})
+        if not exists:
+            raise HTTPException(status_code=404, detail="Slot not found")
         raise HTTPException(status_code=400, detail="Slot full")
 
-    await db.vip_slots.update_one(
-        {"id": slot_id}, {"$inc": {"booked": travelers}}
-    )
     booking = {
         "id": new_id(),
         "slot_id": slot_id,
         "user_id": user["id"],
         "user_name": user["name"],
         "user_email": user["email"],
-        "temple_slug": slot["temple_slug"],
-        "temple_name": slot["temple_name"],
-        "date": slot["date"],
-        "time": slot["time"],
+        "temple_slug": updated["temple_slug"],
+        "temple_name": updated["temple_name"],
+        "date": updated["date"],
+        "time": updated["time"],
         "travelers": travelers,
-        "amount_inr": slot["price_inr"] * travelers,
+        "amount_inr": updated["price_inr"] * travelers,
         "status": "confirmed",
         "created_at": utc_now_iso(),
     }
@@ -205,8 +216,8 @@ async def vip_book(payload: dict, user=Depends(get_current_user)):
     booking.pop("_id", None)
     await notify_user(user["id"], {
         "type": "vip_booked",
-        "title": f"VIP Darshan booked · {slot['temple_name']}",
-        "message": f"{slot['date']} at {slot['time']} for {travelers} pilgrim(s).",
+        "title": f"VIP Darshan booked · {updated['temple_name']}",
+        "message": f"{updated['date']} at {updated['time']} for {travelers} pilgrim(s).",
     })
     return booking
 

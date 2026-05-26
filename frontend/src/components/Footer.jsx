@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Mountain } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -7,7 +6,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-5 lg:px-10 py-16 grid gap-10 md:grid-cols-4">
         <div>
           <div className="flex items-center gap-2">
-            <Mountain className="h-5 w-5 text-gold" />
+            <img src="/punyaverse-logo.png" alt="PunyaVerse" className="h-9 w-9 object-contain" />
             <span className="font-display text-lg">PunyaVerse</span>
           </div>
           <p className="text-sm text-muted-foreground mt-3 leading-relaxed">

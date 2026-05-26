@@ -3,13 +3,12 @@ import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { useNotifications } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon, Mountain, Menu, X, User, Bell, Globe } from "lucide-react";
+import { Sun, Moon, Menu, X, User, Bell, Globe } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -41,8 +40,12 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 glass-light dark:glass-dark border-b border-border/60">
       <div className="mx-auto max-w-7xl px-5 lg:px-10 flex items-center justify-between h-16">
         <Link to="/" className="flex items-center gap-2 group" data-testid="nav-logo">
-          <Mountain className="h-6 w-6 text-gold transition-transform group-hover:rotate-6" strokeWidth={1.6} />
-          <span className="font-display text-xl tracking-tight">PunyaVerse</span>
+          <img
+            src="/punyaverse-logo.png"
+            alt="PunyaVerse"
+            className="h-10 w-10 object-contain transition-transform group-hover:scale-105 drop-shadow"
+          />
+          <span className="font-display text-xl tracking-tight hidden sm:inline">PunyaVerse</span>
         </Link>
 
         <nav className="hidden xl:flex items-center gap-1">

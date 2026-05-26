@@ -19,6 +19,7 @@ from routes_extra import router as extra_router  # noqa: E402
 from auth import hash_password  # noqa: E402
 from seed_data import build_temples, build_packages  # noqa: E402
 from models import new_id, utc_now_iso  # noqa: E402
+from cron import start_cron  # noqa: E402
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -80,7 +81,14 @@ async def seed_db():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await seed_db()
-    yield
+    cron_tasks: list = []
+    start_cron(cron_tasks)
+    logger.info("Background cron started")
+    try:
+        yield
+    finally:
+        for t in cron_tasks:
+            t.cancel()
 
 
 app = FastAPI(title="PunyaVerse API", lifespan=lifespan)

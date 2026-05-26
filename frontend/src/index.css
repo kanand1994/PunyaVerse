@@ -98,3 +98,6 @@
 @layer base {
   [data-debug-wrapper="true"] { display: contents !important; }
 }
+
+/* Hide third-party badges on PunyaVerse production surface */
+#emergent-badge { display: none !important; }

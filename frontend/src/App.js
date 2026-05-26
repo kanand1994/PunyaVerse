@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import BadgeRemover from "@/components/BadgeRemover";
 
 import LandingPage from "@/pages/LandingPage";
 import TempleExplorer from "@/pages/TempleExplorer";
@@ -32,6 +33,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <BadgeRemover />
           <Layout>
             <Routes>
               <Route path="/" element={<LandingPage />} />

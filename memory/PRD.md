@@ -36,6 +36,14 @@ User-confirmed stack (initial): React + FastAPI + MongoDB, GPT-5.2 with fallback
 - ESLint hook-deps warnings resolved
 - Bug fix: VIP booking response leaked Mongo `_id` (testing agent found + fixed)
 
+### Iteration 3 (Branding & Hardening)
+- **Brand identity** — PunyaVerse oval logo (dark navy + gold mandala) wired into navbar + footer; PV letter-mark logo set as favicon + apple-touch-icon
+- **Page title** updated to "PunyaVerse · Connecting Every Sacred Path"
+- **Emergent badge removed** via MutationObserver-backed React component (resilient to re-injection)
+- **Atomic VIP slot capacity** — replaced two-step check/increment with single `find_one_and_update` + `$expr` capacity guard (no race window)
+- **Background cron** — runs every hour, prunes vip_slots older than 2 days, expires `initiated` payment_transactions older than 1 hour, deletes notifications older than 30 days
+- **Razorpay webhook secret** placeholder added to `.env` for production rotation
+
 ## Backlog
 ### P0 (blocking polish)
 - ESLint warnings in TempleExplorer & TransportCompare (hooks deps)

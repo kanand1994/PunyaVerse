@@ -15,6 +15,7 @@ from routes_auth import router as auth_router  # noqa: E402
 from routes_catalog import router as catalog_router  # noqa: E402
 from routes_app import router as app_router  # noqa: E402
 from routes_staff import router as staff_router  # noqa: E402
+from routes_extra import router as extra_router  # noqa: E402
 from auth import hash_password  # noqa: E402
 from seed_data import build_temples, build_packages  # noqa: E402
 from models import new_id, utc_now_iso  # noqa: E402
@@ -102,3 +103,4 @@ app.include_router(auth_router)
 app.include_router(catalog_router)
 app.include_router(app_router)
 app.include_router(staff_router)
+app.include_router(extra_router)

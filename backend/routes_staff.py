@@ -32,6 +32,16 @@ async def employee_confirm(booking_id: str,
         raise HTTPException(status_code=404, detail="Booking not found")
     await db.bookings.update_one({"id": booking_id},
                                    {"$set": {"status": "confirmed"}})
+    try:
+        from routes_extra import notify_user
+        await notify_user(b["user_id"], {
+            "type": "booking_confirmed",
+            "title": "Booking confirmed",
+            "message": f"Your booking has been confirmed by our team.",
+            "booking_id": booking_id,
+        })
+    except Exception:  # noqa: BLE001
+        pass
     return {"ok": True}
 
 

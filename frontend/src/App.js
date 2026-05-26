@@ -15,6 +15,7 @@ import TripBuilder from "@/pages/TripBuilder";
 import TransportCompare from "@/pages/TransportCompare";
 import TrekkingExplorer from "@/pages/TrekkingExplorer";
 import FestivalCalendar from "@/pages/FestivalCalendar";
+import VipDarshan from "@/pages/VipDarshan";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import PaymentSuccess from "@/pages/PaymentSuccess";
@@ -43,6 +44,7 @@ function App() {
               <Route path="/transport" element={<TransportCompare />} />
               <Route path="/trekking" element={<TrekkingExplorer />} />
               <Route path="/festivals" element={<FestivalCalendar />} />
+              <Route path="/vip-darshan" element={<VipDarshan />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />

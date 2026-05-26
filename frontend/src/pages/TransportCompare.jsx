@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatINR } from "@/lib/utils-app";
-import { Plane, Train, Bus, Mountain } from "lucide-react";
+import { Plane, Train, Bus, Mountain, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const ICONS = { flight: Plane, train: Train, bus: Bus, helicopter: Mountain };
 
@@ -21,22 +22,29 @@ const PRESETS = [
 ];
 
 export default function TransportCompare() {
+  const { t } = useTranslation();
   const [origin, setOrigin] = useState("delhi");
   const [destination, setDestination] = useState("kedarnath");
   const [results, setResults] = useState([]);
 
-  const compare = async () => {
+  const compare = useCallback(async () => {
     const { data } = await api.post("/transport/compare", { origin, destination });
     setResults(data);
-  };
-  useEffect(() => { compare(); /* eslint-disable-next-line */ }, []);
+  }, [origin, destination]);
+
+  useEffect(() => { compare(); }, [compare]);
 
   return (
     <div className="mx-auto max-w-6xl px-5 lg:px-10 py-12">
       <p className="font-overline text-gold">Train vs Flight vs Helicopter</p>
       <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-3">Compare every way to reach the dham</h1>
 
-      <Card className="mt-8 p-6">
+      <Card className="mt-6 p-4 flex items-start gap-3 border-dashed border-gold/40 bg-gold/5">
+        <Info className="h-5 w-5 text-gold flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground">{t("common.sample_fares")}</p>
+      </Card>
+
+      <Card className="mt-6 p-6">
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
             <Label>Origin</Label>

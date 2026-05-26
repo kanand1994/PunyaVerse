@@ -11,18 +11,23 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { regionLabel, formatINR } from "@/lib/utils-app";
-import { Check, X as XIcon, Sparkles } from "lucide-react";
+import { Check, X as XIcon, Sparkles, CreditCard, Smartphone } from "lucide-react";
+import { payWithRazorpay, useRazorpayLoader } from "@/lib/razorpay";
+import { useTranslation } from "react-i18next";
 
 export default function PackageDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
+  useRazorpayLoader();
   const [pkg, setPkg] = useState(null);
   const [travelers, setTravelers] = useState(2);
   const [luxury, setLuxury] = useState(false);
   const [departureDate, setDepartureDate] = useState("");
   const [quote, setQuote] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [gateway, setGateway] = useState("razorpay");
 
   useEffect(() => {
     api.get(`/packages/${slug}`).then(({ data }) => setPkg(data));
@@ -37,7 +42,7 @@ export default function PackageDetail() {
 
   const startBooking = async () => {
     if (!user) {
-      toast.error("Please login to book");
+      toast.error(t("common.login_required"));
       navigate(`/login?next=/packages/${slug}`);
       return;
     }
@@ -49,14 +54,24 @@ export default function PackageDetail() {
         departure_date: departureDate || null,
         luxury_tier: luxury,
       });
-      const { data: chk } = await api.post("/payments/checkout", {
-        booking_id: booking.id,
-        origin_url: window.location.origin,
-      });
-      window.location.href = chk.url;
+      if (gateway === "stripe") {
+        const { data: chk } = await api.post("/payments/checkout", {
+          booking_id: booking.id,
+          origin_url: window.location.origin,
+        });
+        window.location.href = chk.url;
+      } else {
+        await payWithRazorpay({
+          bookingId: booking.id,
+          onSuccess: () => navigate("/dashboard"),
+          onCancel: () => setSubmitting(false),
+        });
+        setSubmitting(false);
+      }
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Booking failed");
-    } finally { setSubmitting(false); }
+      setSubmitting(false);
+    }
   };
 
   if (!pkg) return <div className="flex justify-center py-24"><div className="mandala-loader" /></div>;
@@ -147,8 +162,34 @@ export default function PackageDetail() {
                 </div>
               )}
 
+              <div className="border-t pt-3">
+                <p className="font-overline text-xs mb-2">{t("common.select_gateway")}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGateway("razorpay")}
+                    className={`p-3 rounded-md border text-xs flex flex-col items-center gap-1 transition ${gateway === "razorpay" ? "border-gold bg-gold/10" : "border-border"}`}
+                    data-testid="gateway-razorpay"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    <span>UPI / Card</span>
+                    <span className="text-[10px] text-muted-foreground">Razorpay · INR</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGateway("stripe")}
+                    className={`p-3 rounded-md border text-xs flex flex-col items-center gap-1 transition ${gateway === "stripe" ? "border-gold bg-gold/10" : "border-border"}`}
+                    data-testid="gateway-stripe"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>Card</span>
+                    <span className="text-[10px] text-muted-foreground">Stripe · USD</span>
+                  </button>
+                </div>
+              </div>
+
               <Button onClick={startBooking} disabled={submitting} className="w-full bg-gold hover:bg-gold-hover text-himalaya-900" data-testid="book-now-btn">
-                {submitting ? "Preparing checkout…" : "Book Now"}
+                {submitting ? "Preparing checkout…" : t("common.book_now")}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">Free cancellation up to 30 days before departure.</p>
             </div>

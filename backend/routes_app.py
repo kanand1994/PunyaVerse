@@ -257,6 +257,16 @@ async def payment_status(session_id: str, request: Request,
                 {"id": tx["booking_id"]},
                 {"$set": {"status": "confirmed"}},
             )
+            try:
+                from routes_extra import notify_user
+                await notify_user(tx["user_id"], {
+                    "type": "booking_confirmed",
+                    "title": "Yatra confirmed 🙏",
+                    "message": "Stripe payment received — your booking is confirmed.",
+                    "booking_id": tx["booking_id"],
+                })
+            except Exception:  # noqa: BLE001
+                pass
 
     return {
         "session_id": session_id,

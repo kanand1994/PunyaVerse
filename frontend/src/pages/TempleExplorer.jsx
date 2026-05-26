@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { Card } from "@/components/ui/card";
@@ -16,7 +16,7 @@ export default function TempleExplorer() {
   const [trekking, setTrekking] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     const params = {};
     if (q) params.q = q;
@@ -25,9 +25,10 @@ export default function TempleExplorer() {
     const { data } = await api.get("/temples", { params });
     setTemples(data);
     setLoading(false);
-  };
+  }, [q, region, trekking]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [region, trekking]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [region, trekking]);
 
   return (
     <div className="mx-auto max-w-7xl px-5 lg:px-10 py-12">

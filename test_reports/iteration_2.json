@@ -1,0 +1,52 @@
+{
+  "summary": "Iteration 2 backend validation of PunyaVerse: Razorpay (real INR test keys), VIP Darshan slot inventory + booking, WebSocket auth-gated notifications, /api/routes/optimize, and persistent notifications. Wrote 24 new pytest cases; all PASS. Full regression of iteration-1 (46 tests) also re-run — all PASS. Total 70/70 green. Found and fixed 1 minor bug: vip-darshan/book was returning the booking dict after motor's insert_one which leaked MongoDB ObjectId (_id) into the response and caused 500. Applied targeted fix: `booking.pop('_id', None)` before return.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/vip-darshan/book", "issue": "[FIXED in this iteration] After motor.insert_one mutates dict adding ObjectId _id, endpoint returned booking causing FastAPI/jsonable_encoder 500 (ObjectId not iterable). Fixed by popping _id before return in /app/backend/routes_extra.py."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration2_features.py",
+    "/app/backend/tests/test_punyaverse_backend.py",
+    "/app/test_reports/pytest/iteration2_results.xml"
+  ],
+  "action_items": [
+    "No required fixes. All iteration-2 features verified end-to-end.",
+    "Optional: rate-limit /api/payments/razorpay/order (each call hits Razorpay API and creates a DB row even before user pays).",
+    "Optional: add idempotency-key support on Razorpay order endpoint to avoid duplicate orders on retry.",
+    "Optional: clean up vip_slots collection daily (currently lazy-seeds per UTC date, no cleanup).",
+    "Optional: the WebSocket connection has no heartbeat/timeout — long-idle clients could hang. Consider websocket.receive with timeout + auto-close."
+  ],
+  "critical_code_review_comments": [
+    "routes_extra.py: insert_one(booking) → return booking pattern leaked ObjectId — FIXED. Same pattern should be checked in other modules; spot-check passed.",
+    "razorpay verify success path: correctly updates payment_transactions + bookings + writes notification document. HMAC-SHA256(order|payment_id, secret) verified against real Razorpay format.",
+    "razorpay verify failure path: payment_transactions marked 'failed' but booking remains pending_payment — verified correct (test_verify_bad_signature passes; manual inspection of route).",
+    "WebSocket auth: bad token sends {'error':'auth_failed'} then closes — verified. Good UX.",
+    "WebSocket: no per-connection rate limit on ping spam; benign but worth noting.",
+    "notify_user: in-memory _active_connections dict is single-process. If backend scales horizontally, WS notifications will miss users connected to other replicas. Mongo persistence covers retrieval, but real-time push won't work cross-replica. Acceptable for current single-pod deployment.",
+    "VIP slot capacity decrement is not atomic with the capacity check (race window between find_one and $inc). For high contention, should use findOneAndUpdate with conditional capacity guard. Low risk at current scale.",
+    "/api/routes/optimize: stops filtered by 'lat and lng' truthiness — coords of 0 (equator/prime meridian) would be dropped. Not an issue for Indian temples (all positive lat/lng), but worth noting.",
+    "RZP_KEY_SECRET is read into module-level constant — fine, but never logged or exposed via API (verified).",
+    "razorpay webhook signature check uses RAZORPAY_WEBHOOK_SECRET with RZP_KEY_SECRET fallback — works for test mode but should set distinct webhook secret in production."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration2_features.py (new — 24 tests)",
+    "/app/backend/routes_extra.py (1-line fix: pop _id before returning vip booking)"
+  ],
+  "success_rate": {
+    "backend": "100% (70/70 — 24 new + 46 regression)",
+    "frontend": "N/A (skipped per request)"
+  },
+  "test_credentials": "User: yatri@punyaverse.com / Yatri@2026 | Razorpay test keys: rzp_test_StuCGkmaSoiz73 / 0BCvIto2G9FWpjzQlR1BEcnc (env)",
+  "seed_data_creation": "Test created 1 pending_payment booking → confirmed via valid HMAC verify; 1 VIP booking on kashi-vishwanath earliest slot (+2 travelers); ~48 vip_slots lazy-seeded for today's UTC date across 8 VIP temples; ~2 notifications inserted (booking_confirmed + vip_booked). 1 real Razorpay test-order created on api.razorpay.com (test mode, no money moved). Not cleaned up — repeated runs will accumulate vip_bookings.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Regression suite is now split into two files: /app/backend/tests/test_punyaverse_backend.py (iteration 1, 46 tests) + /app/backend/tests/test_iteration2_features.py (iteration 2, 24 tests). Both pass against deployed preview URL. Razorpay create_order hits the real api.razorpay.com endpoint with test keys — needs internet access. WebSocket URL: wss://sacred-journey-ai-1.preview.emergentagent.com/api/ws/notifications?token=<jwt>. Bug fix applied: /api/vip-darshan/book now pops mongo _id before returning. If running this suite repeatedly, vip_bookings and notifications collections will accumulate TEST data — consider adding a teardown fixture or admin cleanup endpoint.",
+  "rca of the issue": "Bug RCA: POST /api/vip-darshan/book was returning HTTP 500 'Internal Server Error'. Root cause — motor's insert_one() mutates the passed dict by adding a BSON ObjectId under the '_id' key. The handler then returned this same dict, which FastAPI tried to serialize via jsonable_encoder; ObjectId isn't JSON-serializable, raising TypeError(\"'ObjectId' object is not iterable\"). Reproduction: any authenticated POST to /api/vip-darshan/book with a valid slot_id. Mitigation applied: in /app/backend/routes_extra.py vip_book() add `booking.pop('_id', None)` after insert_one and before return. Verified by re-running TestVIPDarshan suite — 9/9 pass. Same defensive pattern should be applied wherever an inserted dict is later returned (recommend: always use {'_id': 0} projection on subsequent reads, OR construct response dict separately from insert payload)."
+}

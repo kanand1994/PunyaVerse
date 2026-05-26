@@ -1,28 +1,33 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
+import { useNotifications } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon, Mountain, Menu, X, User } from "lucide-react";
+import { Sun, Moon, Mountain, Menu, X, User, Bell, Globe } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-
-const navItems = [
-  { to: "/temples", label: "Temples" },
-  { to: "/packages", label: "Packages" },
-  { to: "/ai-planner", label: "AI Planner" },
-  { to: "/trip-builder", label: "Build Trip" },
-  { to: "/trekking", label: "Trekking" },
-  { to: "/transport", label: "Compare Transport" },
-  { to: "/festivals", label: "Festivals" },
-];
+import { Badge } from "@/components/ui/badge";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
+  const { t, i18n } = useTranslation();
+  const { notifications } = useNotifications();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const navItems = [
+    { to: "/temples", label: t("nav.temples") },
+    { to: "/packages", label: t("nav.packages") },
+    { to: "/ai-planner", label: t("nav.ai_planner") },
+    { to: "/trip-builder", label: t("nav.trip_builder") },
+    { to: "/vip-darshan", label: t("nav.vip_darshan") },
+    { to: "/transport", label: t("nav.transport") },
+    { to: "/festivals", label: t("nav.festivals") },
+  ];
 
   const dashboardLink =
     user?.role === "superadmin" ? "/sanctum-portal-7821" :
@@ -30,16 +35,17 @@ export default function Navbar() {
     user?.role === "employee" ? "/employee" :
     "/dashboard";
 
+  const changeLang = (lng) => { i18n.changeLanguage(lng); };
+
   return (
     <header className="sticky top-0 z-50 glass-light dark:glass-dark border-b border-border/60">
       <div className="mx-auto max-w-7xl px-5 lg:px-10 flex items-center justify-between h-16">
         <Link to="/" className="flex items-center gap-2 group" data-testid="nav-logo">
           <Mountain className="h-6 w-6 text-gold transition-transform group-hover:rotate-6" strokeWidth={1.6} />
           <span className="font-display text-xl tracking-tight">PunyaVerse</span>
-          <span className="hidden md:inline font-overline text-muted-foreground ml-2">Sacred · AI · Travel</span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden xl:flex items-center gap-1">
           {navItems.map((n) => (
             <NavLink
               key={n.to}
@@ -54,10 +60,22 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {/* Language switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Language" data-testid="lang-toggle">
+                <Globe className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem onClick={() => changeLang("en")} data-testid="lang-en">English</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLang("hi")} data-testid="lang-hi">हिन्दी</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button
-            variant="ghost"
-            size="icon"
+            variant="ghost" size="icon"
             onClick={toggle}
             aria-label="Toggle theme"
             data-testid="theme-toggle"
@@ -65,11 +83,38 @@ export default function Navbar() {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative" data-testid="notif-toggle">
+                  <Bell className="h-4 w-4" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[10px] rounded-full bg-gold text-himalaya-900 flex items-center justify-center font-bold">
+                      {notifications.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="font-overline">{t("nav.notifications")}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <p className="text-xs text-muted-foreground p-3">No new notifications.</p>
+                ) : notifications.slice(0, 6).map((n) => (
+                  <div key={n._id} className="px-3 py-2 border-b border-border last:border-0">
+                    <p className="text-sm font-medium">{n.title}</p>
+                    <p className="text-xs text-muted-foreground">{n.message}</p>
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {!user ? (
             <>
-              <Button variant="ghost" onClick={() => navigate("/login")} data-testid="nav-login-btn">Login</Button>
+              <Button variant="ghost" onClick={() => navigate("/login")} data-testid="nav-login-btn">{t("nav.login")}</Button>
               <Button onClick={() => navigate("/register")} className="bg-gold hover:bg-gold-hover text-himalaya-900" data-testid="nav-register-btn">
-                Begin Yatra
+                {t("nav.begin")}
               </Button>
             </>
           ) : (
@@ -83,23 +128,22 @@ export default function Navbar() {
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel className="font-overline">{user.role}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate(dashboardLink)} data-testid="menu-dashboard">Dashboard</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/dashboard/bookings")} data-testid="menu-bookings">My Bookings</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/dashboard/wishlist")} data-testid="menu-wishlist">Wishlist</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(dashboardLink)} data-testid="menu-dashboard">{t("nav.dashboard")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/dashboard")} data-testid="menu-bookings">{t("nav.my_bookings")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { logout(); navigate("/"); }} data-testid="menu-logout">Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { logout(); navigate("/"); }} data-testid="menu-logout">{t("nav.logout")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
 
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)} data-testid="mobile-menu-toggle">
+          <Button variant="ghost" size="icon" className="xl:hidden" onClick={() => setOpen(!open)} data-testid="mobile-menu-toggle">
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-border/60 px-5 py-4 grid gap-2 bg-background">
+        <div className="xl:hidden border-t border-border/60 px-5 py-4 grid gap-2 bg-background">
           {navItems.map((n) => (
             <Link
               key={n.to}

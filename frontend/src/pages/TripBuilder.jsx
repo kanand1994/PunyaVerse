@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import SacredMap from "@/components/SacredMap";
 import { formatINR, regionLabel } from "@/lib/utils-app";
 import { Plus, X, Minus } from "lucide-react";
 
@@ -34,6 +35,10 @@ export default function TripBuilder() {
 
   const filtered = allTemples.filter((t) => (!region || t.region === region) && !selected.includes(t.id));
 
+  const selectedTempleObjs = selected
+    .map((id) => allTemples.find((t) => t.id === id))
+    .filter((t) => t && t.lat && t.lng);
+
   const computeQuote = async () => {
     if (selected.length === 0) return;
     const { data } = await api.post("/trip-builder/quote", {
@@ -54,7 +59,7 @@ export default function TripBuilder() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-2xl">Choose your temples</h3>
-              <Select value={region} onValueChange={setRegion}>
+              <Select value={region || "all"} onValueChange={(v) => setRegion(v === "all" ? "" : v)}>
                 <SelectTrigger className="w-44" data-testid="filter-region-select"><SelectValue placeholder="All regions" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All regions</SelectItem>
@@ -113,6 +118,13 @@ export default function TripBuilder() {
               </ol>
             )}
           </Card>
+
+          {selectedTempleObjs.length > 0 && (
+            <Card className="p-4">
+              <p className="font-overline mb-2">Route preview (OSRM)</p>
+              <SacredMap points={selectedTempleObjs} height={400} zoom={5} withRoute />
+            </Card>
+          )}
         </div>
 
         <Card className="p-6 lg:sticky lg:top-24 self-start space-y-5 mandala-bg">

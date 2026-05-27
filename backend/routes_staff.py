@@ -75,14 +75,88 @@ async def admin_update_user(user_id: str, payload: AdminUserUpdate,
     target = await db.users.find_one({"id": user_id}, {"_id": 0})
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
-    # admin cannot modify superadmin
-    if user["role"] == "admin" and target["role"] == "superadmin":
-        raise HTTPException(status_code=403, detail="Forbidden")
-    if payload.role == "superadmin" and user["role"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Only superadmin can elevate to superadmin")
+    
+    # 1. If target is admin or superadmin, only superadmin can modify
+    if target["role"] in ("admin", "superadmin") and user["role"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Only superadmin can modify admin or superadmin accounts")
+        
+    # 2. If changing role to admin or superadmin, only superadmin can do so
+    if payload.role in ("admin", "superadmin") and user["role"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Only superadmin can elevate users to admin or superadmin")
+        
+    # 3. Prevent modifying self-role
+    if user_id == user["id"] and payload.role and payload.role != user["role"]:
+        raise HTTPException(status_code=400, detail="Cannot change your own role")
+        
     update = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if "email" in update:
+        update["email"] = update["email"].lower().strip()
+        existing = await db.users.find_one({"email": update["email"], "id": {"$ne": user_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
+            
     if update:
         await db.users.update_one({"id": user_id}, {"$set": update})
+    return {"ok": True}
+
+
+@router.post("/admin/users")
+async def admin_create_user(payload: dict,
+                            user=Depends(require_roles("admin", "superadmin"))):
+    role = payload.get("role", "user")
+    if role not in ("user", "employee", "admin", "superadmin"):
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    # Only superadmin can create admins/superadmins
+    if role in ("admin", "superadmin") and user["role"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Only superadmin can create admin or superadmin accounts")
+        
+    email = payload.get("email", "").lower().strip()
+    if not email or not payload.get("password") or not payload.get("name"):
+        raise HTTPException(status_code=400, detail="name, email, and password are required")
+        
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already in use")
+        
+    doc = {
+        "id": new_id(),
+        "name": payload["name"],
+        "email": email,
+        "password": hash_password(payload["password"]),
+        "role": role,
+        "is_active": payload.get("is_active", True),
+        "created_at": utc_now_iso(),
+    }
+    await db.users.insert_one(doc)
+    return {"id": doc["id"], "name": doc["name"], "email": doc["email"], "role": doc["role"], "is_active": doc["is_active"]}
+
+
+@router.delete("/admin/users/{user_id}")
+async def admin_delete_user(user_id: str,
+                            user=Depends(require_roles("admin", "superadmin"))):
+    if user_id == user["id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete self")
+        
+    target = await db.users.find_one({"id": user_id})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # If target is admin or superadmin, only superadmin can delete
+    if target["role"] in ("admin", "superadmin") and user["role"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Only superadmin can delete admin or superadmin accounts")
+        
+    await db.users.delete_one({"id": user_id})
+    
+    # Log audit event
+    await db.audit_logs.insert_one({
+        "id": new_id(),
+        "actor_id": user["id"],
+        "actor_email": user["email"],
+        "action": "delete_user",
+        "target_user_id": user_id,
+        "created_at": utc_now_iso(),
+    })
     return {"ok": True}
 
 
@@ -227,6 +301,13 @@ async def sa_audit(user=Depends(require_roles("superadmin"))):
     return rows
 
 
+@router.get("/admin/audit-logs")
+async def admin_audit(user=Depends(require_roles("admin", "superadmin"))):
+    rows = await db.audit_logs.find({}, {"_id": 0}).to_list(1000)
+    rows.sort(key=lambda r: r["created_at"], reverse=True)
+    return rows
+
+
 @router.get("/superadmin/system")
 async def sa_system(user=Depends(require_roles("superadmin"))):
     return {
@@ -255,3 +336,11 @@ async def sa_payments(user=Depends(require_roles("superadmin"))):
     rows = await db.payment_transactions.find({}, {"_id": 0}).to_list(5000)
     rows.sort(key=lambda r: r["created_at"], reverse=True)
     return rows
+
+
+@router.get("/admin/payments")
+async def admin_payments(user=Depends(require_roles("admin", "superadmin"))):
+    rows = await db.payment_transactions.find({}, {"_id": 0}).to_list(5000)
+    rows.sort(key=lambda r: r["created_at"], reverse=True)
+    return rows
+

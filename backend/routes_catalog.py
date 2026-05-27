@@ -1,18 +1,21 @@
 """Public catalog routes: temples, packages, transport compare, festivals, weather."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import Optional, List
 from db import db
 from pricing import compare_transport, custom_trip_quote, dynamic_package_price
 from models import (CustomTripRequest, CustomTripQuote,
-                      TransportOption, TempleOut, PackageOut)
+                      TransportOption, TempleOut, PackageOut, PackageCreate, PackageUpdate, TempleCreate, TempleUpdate, new_id)
+from auth import require_roles
 
 router = APIRouter(prefix="/api", tags=["catalog"])
 
 
 @router.get("/temples", response_model=List[TempleOut])
 async def list_temples(region: Optional[str] = None, q: Optional[str] = None,
-                       trekking: Optional[bool] = None):
+                       trekking: Optional[bool] = None, include_inactive: bool = False):
     query = {}
+    if not include_inactive:
+        query["is_active"] = {"$ne": False}
     if region:
         query["region"] = region
     if trekking is not None:
@@ -36,8 +39,11 @@ async def get_temple(slug: str):
 
 
 @router.get("/packages", response_model=List[PackageOut])
-async def list_packages(region: Optional[str] = None, category: Optional[str] = None):
+async def list_packages(region: Optional[str] = None, category: Optional[str] = None,
+                        include_inactive: bool = False):
     query = {}
+    if not include_inactive:
+        query["is_active"] = {"$ne": False}
     if region:
         query["region"] = region
     if category:
@@ -201,3 +207,97 @@ async def crowd_prediction(temple_slug: str):
         "best_visit_window": "Early morning 4-7 AM",
         "expected_wait_minutes": int(base * 1.8),
     }
+
+
+# ============ PACKAGES CRUD ============
+@router.post("/packages", response_model=PackageOut)
+async def create_package(payload: PackageCreate,
+                         user=Depends(require_roles("admin", "superadmin"))):
+    existing = await db.packages.find_one({"slug": payload.slug})
+    if existing:
+        raise HTTPException(status_code=400, detail="Package slug already exists")
+    
+    doc = payload.model_dump()
+    doc["id"] = new_id()
+    await db.packages.insert_one(doc)
+    
+    doc.pop("_id", None)
+    return doc
+
+
+@router.patch("/packages/{package_id}", response_model=PackageOut)
+async def update_package(package_id: str, payload: PackageUpdate,
+                         user=Depends(require_roles("admin", "superadmin"))):
+    pkg = await db.packages.find_one({"id": package_id})
+    if not pkg:
+        raise HTTPException(status_code=404, detail="Package not found")
+        
+    update = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if "slug" in update:
+        existing = await db.packages.find_one({"slug": update["slug"], "id": {"$ne": package_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Package slug already in use")
+            
+    if update:
+        await db.packages.update_one({"id": package_id}, {"$set": update})
+        
+    updated = await db.packages.find_one({"id": package_id}, {"_id": 0})
+    return updated
+
+
+@router.delete("/packages/{package_id}")
+async def delete_package(package_id: str,
+                         user=Depends(require_roles("admin", "superadmin"))):
+    pkg = await db.packages.find_one({"id": package_id})
+    if not pkg:
+        raise HTTPException(status_code=404, detail="Package not found")
+        
+    await db.packages.delete_one({"id": package_id})
+    return {"ok": True}
+
+
+# ============ TEMPLES CRUD ============
+@router.post("/temples", response_model=TempleOut)
+async def create_temple(payload: TempleCreate,
+                        user=Depends(require_roles("admin", "superadmin"))):
+    existing = await db.temples.find_one({"slug": payload.slug})
+    if existing:
+        raise HTTPException(status_code=400, detail="Temple slug already exists")
+    
+    doc = payload.model_dump()
+    doc["id"] = new_id()
+    await db.temples.insert_one(doc)
+    
+    doc.pop("_id", None)
+    return doc
+
+
+@router.patch("/temples/{temple_id}", response_model=TempleOut)
+async def update_temple(temple_id: str, payload: TempleUpdate,
+                        user=Depends(require_roles("admin", "superadmin"))):
+    t = await db.temples.find_one({"id": temple_id})
+    if not t:
+        raise HTTPException(status_code=404, detail="Temple not found")
+        
+    update = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if "slug" in update:
+        existing = await db.temples.find_one({"slug": update["slug"], "id": {"$ne": temple_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Temple slug already in use")
+            
+    if update:
+        await db.temples.update_one({"id": temple_id}, {"$set": update})
+        
+    updated = await db.temples.find_one({"id": temple_id}, {"_id": 0})
+    return updated
+
+
+@router.delete("/temples/{temple_id}")
+async def delete_temple(temple_id: str,
+                        user=Depends(require_roles("admin", "superadmin"))):
+    t = await db.temples.find_one({"id": temple_id})
+    if not t:
+        raise HTTPException(status_code=404, detail="Temple not found")
+        
+    await db.temples.delete_one({"id": temple_id})
+    return {"ok": True}

@@ -61,11 +61,62 @@ class TempleBase(BaseModel):
     trek_difficulty: Optional[str] = None
     avg_rating: float = 4.5
     festival_dates: List[str] = Field(default_factory=list)
+    is_active: bool = True
 
 
 class TempleOut(TempleBase):
     id: str
     slug: str
+
+
+class TempleCreate(BaseModel):
+    name: str
+    slug: str
+    region: str
+    state_or_country: str
+    deity: Optional[str] = None
+    significance: Optional[str] = None
+    history: Optional[str] = None
+    best_season: Optional[str] = None
+    darshan_timings: Optional[str] = None
+    vip_darshan: Optional[bool] = False
+    elevation_m: Optional[int] = None
+    nearest_airport: Optional[str] = None
+    nearest_railway: Optional[str] = None
+    image_url: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    requires_trek: Optional[bool] = False
+    trek_distance_km: Optional[float] = None
+    trek_difficulty: Optional[str] = None
+    avg_rating: Optional[float] = 4.5
+    festival_dates: List[str] = Field(default_factory=list)
+    is_active: Optional[bool] = True
+
+
+class TempleUpdate(BaseModel):
+    name: Optional[str] = None
+    slug: Optional[str] = None
+    region: Optional[str] = None
+    state_or_country: Optional[str] = None
+    deity: Optional[str] = None
+    significance: Optional[str] = None
+    history: Optional[str] = None
+    best_season: Optional[str] = None
+    darshan_timings: Optional[str] = None
+    vip_darshan: Optional[bool] = None
+    elevation_m: Optional[int] = None
+    nearest_airport: Optional[str] = None
+    nearest_railway: Optional[str] = None
+    image_url: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    requires_trek: Optional[bool] = None
+    trek_distance_km: Optional[float] = None
+    trek_difficulty: Optional[str] = None
+    avg_rating: Optional[float] = None
+    festival_dates: Optional[List[str]] = None
+    is_active: Optional[bool] = None
 
 
 # ============== PACKAGE ==============
@@ -86,6 +137,7 @@ class PackageBase(BaseModel):
     highlights: List[str] = Field(default_factory=list)
     difficulty: str = "easy"
     category: str = "pilgrimage"  # pilgrimage | trekking | helicopter
+    is_active: bool = True
 
 
 class PackageOut(PackageBase):
@@ -203,7 +255,49 @@ class CheckoutResponse(BaseModel):
 
 # ============== ADMIN ==============
 class AdminUserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
     role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class PackageCreate(BaseModel):
+    title: str
+    slug: str
+    summary: str
+    duration_days: int
+    base_price_inr: float
+    luxury_price_inr: Optional[float] = None
+    region: str
+    transport_modes: List[str] = Field(default_factory=list)
+    temples_included: List[str] = Field(default_factory=list)
+    inclusions: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+    cancellation_policy: Optional[str] = "Free cancellation up to 30 days before departure."
+    hero_image: Optional[str] = None
+    highlights: List[str] = Field(default_factory=list)
+    difficulty: Optional[str] = "easy"
+    category: Optional[str] = "pilgrimage"
+    is_active: Optional[bool] = True
+
+
+class PackageUpdate(BaseModel):
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    summary: Optional[str] = None
+    duration_days: Optional[int] = None
+    base_price_inr: Optional[float] = None
+    luxury_price_inr: Optional[float] = None
+    region: Optional[str] = None
+    transport_modes: Optional[List[str]] = None
+    temples_included: Optional[List[str]] = None
+    inclusions: Optional[List[str]] = None
+    exclusions: Optional[List[str]] = None
+    cancellation_policy: Optional[str] = None
+    hero_image: Optional[str] = None
+    highlights: Optional[List[str]] = None
+    difficulty: Optional[str] = None
+    category: Optional[str] = None
     is_active: Optional[bool] = None
 
 

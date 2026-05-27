@@ -132,6 +132,9 @@ export default function Navbar() {
                 <DropdownMenuLabel className="font-overline">{user.role}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate(dashboardLink)} data-testid="menu-dashboard">{t("nav.dashboard")}</DropdownMenuItem>
+                {user.role === "superadmin" && (
+                  <DropdownMenuItem onClick={() => navigate("/admin")} data-testid="menu-operations">Operations Console</DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => navigate("/dashboard")} data-testid="menu-bookings">{t("nav.my_bookings")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => { logout(); navigate("/"); }} data-testid="menu-logout">{t("nav.logout")}</DropdownMenuItem>

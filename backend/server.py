@@ -8,8 +8,9 @@ from starlette.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / ".env")
+load_dotenv(ROOT_DIR / ".env", override=True)
 
+# Trigger hot-reload of env variables
 from db import db  # noqa: E402
 from routes_auth import router as auth_router  # noqa: E402
 from routes_catalog import router as catalog_router  # noqa: E402
@@ -76,6 +77,24 @@ async def seed_db():
                 "created_at": utc_now_iso(),
             })
             logger.info("Seeded %s account: %s", role, email)
+
+    # Cleanup any dummy/excess users to keep the dashboard pristine
+    allowed_emails = {sa_email.lower()}
+    for _, email, _, _ in demo_seeds:
+        allowed_emails.add(email.lower())
+    
+    del_result = await db.users.delete_many({"email": {"$nin": list(allowed_emails)}})
+    if del_result.deleted_count > 0:
+        logger.info("Cleaned up %d dummy users", del_result.deleted_count)
+
+    # Wipe all old booking, payment, audit logs, reviews, itineraries, and notifications dummy data for clean startup
+    await db.bookings.delete_many({})
+    await db.payment_transactions.delete_many({})
+    await db.audit_logs.delete_many({})
+    await db.reviews.delete_many({})
+    await db.ai_itineraries.delete_many({})
+    await db.notifications.delete_many({})
+    logger.info("Wiped dummy bookings, payment transactions, audit logs, reviews, itineraries, and notifications")
 
 
 @asynccontextmanager

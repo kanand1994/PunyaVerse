@@ -158,6 +158,7 @@ class TestRazorpay:
 
 
 # ============ VIP DARSHAN ============
+@pytest.mark.skip(reason="VIP Darshan decommissioned in Iteration 4")
 class TestVIPDarshan:
     def test_slots_all(self, s):
         r = s.get(f"{API}/vip-darshan/slots", timeout=20)

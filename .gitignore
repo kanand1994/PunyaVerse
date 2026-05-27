@@ -96,8 +96,8 @@ deploy_aws.md
 docker-compose.yml
 Dockerfile
 entrypoint.sh
-implementation_plan.md
+implementation_plan*.md
 nginx.conf
-task.md
-walkthrough.md
+task*.md
+walkthrough*.md
 Summarize*.md

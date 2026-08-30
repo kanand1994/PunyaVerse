@@ -30,8 +30,8 @@ export STRIPE_API_KEY="${STRIPE_API_KEY:-}"
 export SUPERADMIN_PASSWORD="${SUPERADMIN_PASSWORD:-ChangeMe!123}"
 
 cd /app/backend
-# Start Uvicorn in the background and pipe logs
-python -m uvicorn server:app --host 127.0.0.1 --port 8000 > /var/log/uvicorn.log 2>&1 &
+# Start Uvicorn in the background (without hiding logs so we can see errors in Railway)
+python3 -m uvicorn server:app --host 127.0.0.1 --port 8000 &
 
 # Wait for FastAPI backend to initialize
 echo "⏳ Waiting for PunyaVerse API to become ready..."

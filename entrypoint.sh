@@ -41,9 +41,6 @@ done
 echo "✅ PunyaVerse API is online and fully seeded!"
 
 # 3. Start Nginx in the foreground
-echo "⚙️ Configuring Nginx to listen on Railway Port ${PORT:-80}..."
-sed -i "s/listen 80;/listen ${PORT:-80};/g" /etc/nginx/nginx.conf
-
 echo "⚙️ Launching Nginx Reverse Proxy..."
-echo "🕉️ PunyaVerse is now fully live!"
+echo "🕉️ PunyaVerse is now fully live on port 80!"
 exec nginx -g "daemon off;"

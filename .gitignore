@@ -93,11 +93,7 @@ credentials.json
 *.key
 .credentials
 deploy_aws.md
-docker-compose.yml
-Dockerfile
-entrypoint.sh
 implementation_plan*.md
-nginx.conf
 task*.md
 walkthrough*.md
 Summarize*.md

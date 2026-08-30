@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  punyaverse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: punyaverse-app
+    ports:
+      - "80:80"
+    volumes:
+      # Persists MongoDB databases to a Docker-managed named volume
+      - punyaverse-db-data:/data/db
+      # Persists logs for troubleshooting and auditing
+      - punyaverse-logs:/var/log
+    environment:
+      - DB_NAME=punyaverse
+      - JWT_SECRET=super-secret-key-change-me-in-production-12345
+      - SUPERADMIN_PASSWORD=K@ilash#Sanctum2026!
+      # Payment and integration keys (override these with live values as needed)
+      - STRIPE_API_KEY=sk_test_mock_stripe_key_12345
+      - RAZORPAY_KEY_ID=rzp_test_mock_razorpay_key_12345
+      - RAZORPAY_KEY_SECRET=mock_razorpay_secret_12345
+      - RESEND_API_KEY=re_mock_resend_key_12345
+      - EMERGENT_LLM_KEY=mock_llm_key_12345
+    restart: unless-stopped
+
+volumes:
+  punyaverse-db-data:
+    driver: local
+  punyaverse-logs:
+    driver: local
